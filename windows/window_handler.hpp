@@ -83,7 +83,7 @@ namespace handler {
                     std::lerp(ImGui::GetIO().DisplaySize.x, 0, anim_progress),
                     std::lerp(ImGui::GetIO().DisplaySize.y, 100, anim_progress)
             ),
-            ImVec2(400, 100)
+            ImVec2(500, ImGui::GetIO().DisplaySize.y - 100)
         );
     }
 }
