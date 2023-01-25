@@ -18,11 +18,12 @@ set(IMGUI_SOURCES
 set(GLFW_PATH ./glfw)
 set(SOURCES
         main.cpp
-        windows/window_handler.hpp)
+        windows/window_handler.hpp components/LiveLogViewer.cpp components/LiveLogViewer.h windows/run_sim.h)
 
 include_directories(
         ${IMGUI_DIR}
         ${IMGUI_DIR}/backends
+        components
 )
 
 find_package(OpenGL REQUIRED)
