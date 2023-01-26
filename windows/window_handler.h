@@ -22,7 +22,7 @@
 int bgStarPos[1000][2];
 int bgStarVel[1000][2];
 
-static float vel_range = 6.65f;
+static float vel_range = 50.65f;
 
 void InitStars() {
     std::random_device rd;
@@ -31,13 +31,14 @@ void InitStars() {
     std::uniform_int_distribution<> dis_x(0, ImGui::GetMainViewport()->Size.x);
     std::uniform_int_distribution<> dis_y(0, ImGui::GetMainViewport()->Size.y);
 
-    std::normal_distribution<float> dis_v(-vel_range, vel_range + 50);
+    std::normal_distribution<float> dis_v(-vel_range / 2, vel_range * 2);
     for (int i = 0; i < 1000; i++) {
-        bgStarVel[i][0] = dis_x(gen);
-        bgStarVel[i][1] = dis_y(gen);
+//        bgStarVel[i][0] = dis_v(gen);
+//        bgStarVel[i][1] = dis_v(gen);
 
         bgStarPos[i][0] = dis_x(gen);
         bgStarPos[i][1] = dis_y(gen);
+
         bgStarVel[i][0] = dis_v(gen);
         bgStarVel[i][1] = dis_v(gen);
     }
@@ -52,7 +53,7 @@ void DrawDots()
     ImDrawList* draw_list = ImGui::GetBackgroundDrawList();
 
     for (int i = 0; i < 1000; i++) {
-        std::random_device rd;
+        static std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<> dis_alpha(100, 150);
 
@@ -100,7 +101,7 @@ void init() {
     printf("Done initializing.\n");
 }
 void new_frame(GLFWwindow* window) {
-    ImGui::ShowDemoWindow(&globals->show_demo_window);
+//    ImGui::ShowDemoWindow(&globals->show_demo_window);
     if(globals->show_another_window)
         ImGui::ShowStyleEditor();
 

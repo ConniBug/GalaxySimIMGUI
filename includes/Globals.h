@@ -10,8 +10,8 @@
 #include <string>
 
 struct Globals {
-    bool show_demo_window    = true;
-    bool show_another_window = true;
+    bool show_demo_window    = false;
+    bool show_another_window = false;
 
     std::string* active_log_file = new std::string("initial");
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
