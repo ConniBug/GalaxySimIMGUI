@@ -15,7 +15,7 @@
 #endif
 
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
-#include "windows/window_handler.hpp"
+#include "windows/window_handler.h"
 
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
@@ -28,6 +28,8 @@ ImVec4 clear_color = ImVec4(0.f, 0.f, 0.f, 1.00f);
 
 int main(int, char**)
 {
+    init();
+
     // Setup window
     glfwSetErrorCallback(glfw_error_callback);
     if (!glfwInit())
@@ -85,7 +87,7 @@ int main(int, char**)
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        handler::new_frame(window);
+        new_frame(window);
 
         // Rendering
         ImGui::Render();

@@ -10,105 +10,146 @@
 #include <imgui_custom.h>
 #include <iostream>
 #include <CommandLine.h>
+#include "Globals.h"
+#include <pthread.h>
+#include <filesystem>
 
-namespace handler {
-    namespace windows {
-        void run_sim(ImVec2 position, ImVec2 size) {
-            static struct Config {
-                struct star_generation {
-                    bool enabled = false;
+namespace windows {
+    void* sim_thread(void* args) {
+        std::string pwd = std::filesystem::current_path().string();
+#if _WIN32 // Windows
+        std::string path = pwd + "\\GalaxySimulation.exe";
+#else // Linux, Mac or other Unix based OS
+        std::string path = pwd + "/GalaxySimulation";
+#endif
+        CommandLine cmd = CommandLine(path);
+        std::cout << cmd.getCommandlineString() << std::endl;
+        std::cout << cmd.executeAndWait() << std::endl;
+    }
 
-                    int active_mode = 0;
-                    const char* modes[3] = {"None", "Gaussian", "Uniform"};
+    void run_sim(ImVec2 position, ImVec2 size, int flags) {
+        static struct Config {
+            int region_divisions[3] = {0, 0, 0};
 
-                    int star_count = 0;
-                    int stars_per_arm = 0;
-                    float mean_mass = 0;
-                    float std_mass = 0;
+            struct star_generation {
+                int target_height = 0;
+                int animation_speed = 5;
+                void draw_config(star_generation *config, ImVec2 parent_size, int width) {
+                    static int current_height = 0;
+                    if(current_height != config->target_height)
+                        current_height = std::lerp(current_height, target_height, config->animation_speed / 100.0f);
 
+//                        return;
+                    ImGui::Columns(1);
 
-                } star_generation;
-            } config;
+                    if(current_height &&
+                            ImGui::BeginChild("Star Generation", ImVec2(parent_size.x - 16, current_height), false,
+                                              ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
 
-            ImGui::SetNextWindowSize(size);
-            ImGui::SetNextWindowPos(position);
-            if (ImGui::Begin("Simulation Config Window", NULL,  ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
-                                                                ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar)) {
-                static int firstColWidth = 300;
-                static int secondColWidth = 600;
-                ImGui::Columns(2, "SimMainCols##333");  // 2-ways, with border
-                ImGui::SetColumnWidth(0, firstColWidth);
-                ImGui::SetColumnWidth(1, secondColWidth);
+                        if(current_height) {
+                            ImGui::Custom::CentreTextLocal("Generation Settings", parent_size.x);
 
-                ImGui::Separator();
-                ImGui::Text("Simulation Config");
-                ImGui::NextColumn();
-                ImGui::Text("Simulation Preview");
+                            ImGui::Custom::CentreTextLocal(config->modes[config->active_mode], parent_size.x);
 
-                ImGui::Separator();
-                ImGui::Columns(3, "sdsada");
-                static int bias = 16;
-                ImGui::SetColumnWidth(0, (firstColWidth / 2) + bias);
-                ImGui::SetColumnWidth(1, (firstColWidth / 2) - bias);
-                ImGui::SetColumnWidth(2, secondColWidth);
+                            ImGui::Columns(2, "ssadopom");
+                            ImGui::SetColumnWidth(0, (width / 2));
+                            ImGui::Spacing();
 
-                ImGui::Text("Generate Stars");
-                ImGui::NextColumn();
-                static int tmp2 = 0;
+                            ImGui::Text("Star Count"); ImGui::NextColumn();
+                            ImGui::InputInt("##star_count", &config->star_count); ImGui::NextColumn();
 
-                if (ImGui::Custom::DropdownButton(ImVec2(20,20))) {
-                    config.star_generation.enabled = !config.star_generation.enabled;
-                }
-//                ImGui::Checkbox("##35228", &config.star_generation.enabled);
-//                ImGui::SameLine();
-                if(ImGui::Combo("##35227", &config.star_generation.active_mode, config.star_generation.modes, IM_ARRAYSIZE(config.star_generation.modes))) {
-                    config.star_generation.enabled = config.star_generation.active_mode != 0;
-                }
-                ImGui::NextColumn();
+                            ImGui::Text("Stars Per Arm"); ImGui::NextColumn();
+                            ImGui::InputInt("##stars_per_arm", &config->stars_per_arm); ImGui::NextColumn();
 
-                ImGui::Text("Star Generation Preview");
-                ImGui::NextColumn();
-                ImGui::NextColumn();
-                ImGui::Columns(2, "SimMainCols##323133");  // 2-ways, with border
-//                ImGui::SetColumnWidth(0, firstColWidth);
-                ImGui::SetColumnWidth(0, firstColWidth);
-                ImGui::SetColumnWidth(1, secondColWidth);
+                            ImGui::Text("Mean Mass"); ImGui::NextColumn();
+                            ImGui::InputFloat("##mean_mass", &config->mean_mass); ImGui::NextColumn();
 
-                ImGui::Separator();
-                {
-                    const auto textSize_title = ImGui::CalcTextSize("Generation Settings");
-                    // TODO: Optimise this
-                    auto textSize_sub = ImGui::CalcTextSize(config.star_generation.modes[config.star_generation.active_mode]);
+                            ImGui::Text("Std Mass"); ImGui::NextColumn();
+                            ImGui::InputFloat("##std_mass", &config->std_mass); ImGui::NextColumn();
 
-                    auto cursorPos = ImGui::GetCursorPos();
-                    ImGui::SetCursorPos(ImVec2(cursorPos.x + ((firstColWidth - textSize_title.x) / 2) - 10, cursorPos.y));
-                    ImGui::Text("Generation Settings");
-                    ImGui::SetCursorPos(ImVec2(cursorPos.x, cursorPos.y + textSize_title.y + 5));
+                            //                        ImGui::SliderInt("Star Count", &config->star_count, 0, 10000, "%d");
+                            //                        ImGui::SliderFloat("Star Count", (float*)&config->star_count, 0, 1000, "%e");
 
-                    if(config.star_generation.enabled) {
-                        cursorPos = ImGui::GetCursorPos();
-                        ImGui::SetCursorPos(ImVec2(cursorPos.x + ((firstColWidth - textSize_sub.x) / 2) - 10, cursorPos.y));
-                        ImGui::Text(config.star_generation.modes[config.star_generation.active_mode]);
-                        ImGui::SetCursorPos(ImVec2(cursorPos.x, cursorPos.y + textSize_sub.y + 5));
+                            ImGui::Spacing();
+                            ImGui::Columns(1);
+                            ImGui::Custom::CentreTextLocal("Simulation Area", parent_size.x);
+                            ImGui::Columns(2, "oinoi");
+                            ImGui::SetColumnWidth(0, (width / 2));
 
-                        ImGui::InputInt("Star Count", &config.star_generation.star_count, 1, 100, ImGuiInputFlags_RepeatRateNavTweak);
-//                        ImGui::SliderInt("Star Count", &config.star_generation.star_count, 0, 10000, "%d");
-//                        ImGui::SliderFloat("Star Count", (float*)&config.star_generation.star_count, 0, 1000, "%e");
-                        ImGui::SliderInt("Stars Per Arm", &config.star_generation.stars_per_arm, 0, 10000, "%d");
-                        ImGui::SliderFloat("Mean Mass", &config.star_generation.mean_mass, 0, 100, "%.1f Solar Masses");
-                        ImGui::SliderFloat("std mass", &config.star_generation.std_mass, 0, 1, "%.1f Solar Masses");
+                            ImGui::Text("Min"); ImGui::NextColumn();
+                            ImGui::InputInt3("##min_position", config->min_position); ImGui::NextColumn();
 
-                        static fVector pos1 = {0, 0, 0};
-                        static fVector pos2 = {0, 0, 0};
-                        ImGui::Spacing();
-                        ImGui::Custom::CentreTextLocal("Simulation Area", firstColWidth);
-                        ImGui::Custom::CentreTextLocal("Simulation Area", firstColWidth);
-                        ImGui::Custom::CentreTextLocal("Simulation Area", firstColWidth);
-                        ImGui::Custom::CentreTextLocal("Simulation Area", firstColWidth);
-                        ImGui::Custom::InputVector3("Min", &pos1, "%.0f");
-                        ImGui::Custom::InputVector3("Max", &pos2, "%.0f");
+                            ImGui::Text("Max"); ImGui::NextColumn();
+                            ImGui::InputInt3("##max_position", config->max_position); ImGui::NextColumn();
+                        }
+                        ImGui::EndChild();
                     }
                 }
+
+                bool enabled = false;
+
+                int active_mode = 0;
+                const char* modes[3] = {"None", "Gaussian", "Uniform"};
+
+                int star_count = 0;
+                int stars_per_arm = 0;
+                float mean_mass = 0;
+                float std_mass = 0;
+
+                int min_position[3] = {0, 0, 0};
+                int max_position[3] = {0, 0, 0};
+
+            } star_generation;
+        } config;
+
+        ImGui::SetNextWindowSize(size);
+        ImGui::SetNextWindowPos(position);
+        if (ImGui::Begin("Simulation Config Window", NULL,  flags)) {
+            static int firstColWidth = 300;
+
+            ImGui::Separator();
+            ImGui::Text("Simulation Config");
+            ImGui::Separator();
+            ImGui::Columns(2, "sdsada");
+            static int bias = 16;
+            ImGui::SetColumnWidth(0, (firstColWidth / 2) + bias);
+
+            ImGui::Text("Generate Stars");
+            ImGui::NextColumn();
+            static int tmp2 = 0;
+
+
+            // Star Generation Dropdown Button and Combo
+            if (ImGui::ArrowButton("##DOWN_123", config.star_generation.enabled ? ImGuiDir_Down : ImGuiDir_Right)) {
+                config.star_generation.enabled = !config.star_generation.enabled;
+                config.star_generation.target_height = config.star_generation.enabled ? 215 : 0;
+
+            } ImGui::SameLine();
+            if(ImGui::Combo("##35227", &config.star_generation.active_mode, config.star_generation.modes, IM_ARRAYSIZE(config.star_generation.modes))) {
+                config.star_generation.enabled = config.star_generation.active_mode != 0;
+                config.star_generation.target_height = config.star_generation.enabled ? 215 : 0;
+            }
+
+            ImGui::NextColumn();
+
+            {
+                config.star_generation.draw_config(&config.star_generation, size, firstColWidth + 15);
+
+                ImGui::Separator();
+
+                ImGui::Columns(2, "sdsada");
+                ImGui::SetColumnWidth(0, (firstColWidth / 2) + bias);
+
+                ImGui::Text("Region Divisions");
+                ImGui::Custom::HelpMarker(
+                        "Controls the number of divisions in each dimension of the simulation region. "
+                        "");
+
+                ImGui::NextColumn();
+                ImGui::InputInt3("##123", config.region_divisions); ImGui::NextColumn();
+
+                ImGui::Columns(1);
+            }
 
 //                Vectorr min_position = Vectorr(-10, -10, -5);
 //                Vectorr max_position = Vectorr(10, 10, 5);
@@ -128,26 +169,27 @@ namespace handler {
 //                Vectorr gaussian_std = Vectorr(0.2, 0.2, 0.2);
 //
 //                ImGui::SliderInt("##35229", &bias, -100, 100);
-                ImGui::Separator();
+            ImGui::Separator();
 
-                static bool generating = false;
-                if(ImGui::Button("Generate")) {
-                    if(generating) {
-                        generating = false;
-                        return;
-                    }
-                    generating = true;
-                    std::cout << "Generating" << std::endl;
-
-//                    std::thread t1(generate, &config);
-
-                    CommandLine cmd = CommandLine("echo");
-                    std::cout << cmd.getCommandlineString() << std::endl;
-                    std::cout << cmd.executeAndWait() << std::endl;
+            static bool generating = false;
+            if(ImGui::Button("Generate")) {
+                if(generating) {
+                    generating = false;
+                    return;
                 }
+                generating = true;
+                std::cout << "Generating" << std::endl;
+
+
+                pthread_t thr;
+                pthread_create(&thr, NULL, sim_thread, &config);
+
+                std::string pwd = std::filesystem::current_path().string();
+                std::string path = pwd + "/log.txt";
+                *globals->active_log_file = path;
             }
-            ImGui::End();
         }
+        ImGui::End();
     }
 }
 #endif //GALAXYSIMULATIONUI_RUN_SIM_H

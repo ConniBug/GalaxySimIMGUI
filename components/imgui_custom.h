@@ -10,6 +10,33 @@
 
 namespace ImGui {
     namespace Custom {
+        namespace helper {
+
+        }
+        // Stolen from imgui_demo.cpp
+        //
+        // Helper to display a little (?) mark which shows a tooltip when hovered.
+        // In your own code you may want to display an actual icon if you are using a merged icon fonts (see docs/FONTS.md)
+        static void HelpMarker(const char* desc, float window_rounding = 6.f, const char* text = "(?)")
+        {
+            // Set rounding
+            float initial_rounding = ImGui::GetStyle().WindowRounding;
+            ImGui::GetStyle().WindowRounding = window_rounding;
+
+            ImGui::SameLine();
+            ImGui::TextDisabled(text);
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
+            {
+                ImGui::BeginTooltip();
+                ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+                ImGui::TextUnformatted(desc);
+                ImGui::PopTextWrapPos();
+                ImGui::EndTooltip();
+            }
+
+            ImGui::GetStyle().WindowRounding = initial_rounding;
+        }
+
         bool DropdownButton(ImVec2 buttonSize) {
             ImGuiWindow* window = ImGui::GetCurrentWindow();
             float x = ImGui::GetCursorPosX();

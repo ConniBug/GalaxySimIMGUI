@@ -129,14 +129,6 @@ struct Vector_t {
         return *this;
     }
 
-    constexpr Vector_t& operator/(int div) noexcept
-    {
-        x /= div;
-        y /= div;
-        z /= div;
-        return *this;
-    }
-
     constexpr Vector_t& operator/(TYPE div) noexcept
     {
         x /= div;

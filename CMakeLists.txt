@@ -18,12 +18,12 @@ set(IMGUI_SOURCES
 set(GLFW_PATH ./glfw)
 set(SOURCES
         main.cpp
-        windows/window_handler.hpp
+        windows/window_handler.h
         components/LiveLogViewer.cpp components/LiveLogViewer.h
         windows/run_sim.h
         components/imgui_custom.h
         includes/Vector3.h
-        includes/CommandLine.h windows/header.h windows/window_logs.h)
+        includes/CommandLine.h windows/header.h windows/window_logs.h includes/Globals.h includes/Globals.cpp)
 
 include_directories(
         ${IMGUI_DIR}
