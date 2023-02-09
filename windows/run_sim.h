@@ -68,8 +68,14 @@ namespace windows {
             int region_divisions[3] = {0, 0, 0};
 
             struct star_generation {
+                // Used to animate the config window's height
                 int target_height = 0;
-                int animation_speed = 5;
+                int animation_speed = 9;
+
+                const int line_height = 20;
+                const int config_window_height = line_height * 15; // Line height * number of lines
+
+
                 void draw_config(star_generation *config, ImVec2 parent_size, int width) {
                     static int current_height = 0;
                     if(current_height != config->target_height)
@@ -78,46 +84,91 @@ namespace windows {
 //                        return;
                     ImGui::Columns(1);
 
-                    if(current_height &&
-                            ImGui::BeginChild("Star Generation", ImVec2(parent_size.x - 16, current_height), false,
-                                              ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse)) {
+                    ImVec2 temp_size = ImVec2(parent_size.x - 16, current_height);
+                    static int last_height = current_height;
+                    unsigned int flags = current_height == last_height ? 0 :
+                            ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+                    last_height = current_height;
 
-                        if(current_height) {
-                            ImGui::Custom::CentreTextLocal("Generation Settings", parent_size.x);
+                    if(current_height && ImGui::BeginChild("Star Generation", temp_size, 0, flags))
+                    {
+                        int tmp_col_counter = 0;
+#define SETUP_COLUMN ++tmp_col_counter; ImGui::Columns(2, "STAR_GEN_COL##" + tmp_col_counter); ImGui::SetColumnWidth(0, width / 2); ImGui::Spacing()
+                        ImGui::Custom::CentreTextLocal("Generation Settings", parent_size.x);
 
-                            ImGui::Custom::CentreTextLocal(config->modes[config->active_mode], parent_size.x);
+                        ImGui::Custom::CentreTextLocal(config->modes[config->active_mode], parent_size.x);
 
-                            ImGui::Columns(2, "ssadopom");
-                            ImGui::SetColumnWidth(0, (width / 2));
-                            ImGui::Spacing();
+                        SETUP_COLUMN;
 
-                            ImGui::Text("Star Count"); ImGui::NextColumn();
-                            ImGui::InputInt("##star_count", &config->star_count); ImGui::NextColumn();
+                        ImGui::Text("Star Count"); ImGui::NextColumn();
+                        ImGui::InputInt("##star_count", &config->star_count); ImGui::NextColumn();
 
-                            ImGui::Text("Stars Per Arm"); ImGui::NextColumn();
-                            ImGui::InputInt("##stars_per_arm", &config->stars_per_arm); ImGui::NextColumn();
+                        ImGui::Text("Stars Per Arm"); ImGui::NextColumn();
+                        ImGui::InputInt("##stars_per_arm", &config->stars_per_arm); ImGui::NextColumn();
 
-                            ImGui::Text("Mean Mass"); ImGui::NextColumn();
-                            ImGui::InputFloat("##mean_mass", &config->mean_mass); ImGui::NextColumn();
+                        ImGui::Text("Mean Mass"); ImGui::NextColumn();
+                        ImGui::InputFloat("##mean_mass", &config->mean_mass); ImGui::NextColumn();
 
-                            ImGui::Text("Std Mass"); ImGui::NextColumn();
-                            ImGui::InputFloat("##std_mass", &config->std_mass); ImGui::NextColumn();
+                        ImGui::Text("Std Mass"); ImGui::NextColumn();
+                        ImGui::InputFloat("##std_mass", &config->std_mass); ImGui::NextColumn();
 
-                            //                        ImGui::SliderInt("Star Count", &config->star_count, 0, 10000, "%d");
-                            //                        ImGui::SliderFloat("Star Count", (float*)&config->star_count, 0, 1000, "%e");
+                        //                        ImGui::SliderInt("Star Count", &config->star_count, 0, 10000, "%d");
+                        //                        ImGui::SliderFloat("Star Count", (float*)&config->star_count, 0, 1000, "%e");
 
-                            ImGui::Spacing();
-                            ImGui::Columns(1);
-                            ImGui::Custom::CentreTextLocal("Simulation Area", parent_size.x);
-                            ImGui::Columns(2, "oinoi");
-                            ImGui::SetColumnWidth(0, (width / 2));
+                        ImGui::Spacing(); ImGui::Columns(1);
+                        ImGui::Custom::CentreTextLocal("Simulation Area", parent_size.x);
 
-                            ImGui::Text("Min"); ImGui::NextColumn();
-                            ImGui::InputInt3("##min_position", config->min_position); ImGui::NextColumn();
+                        SETUP_COLUMN;
 
-                            ImGui::Text("Max"); ImGui::NextColumn();
-                            ImGui::InputInt3("##max_position", config->max_position); ImGui::NextColumn();
+                        ImGui::Text("Min"); ImGui::NextColumn();
+                        ImGui::InputInt3("##min_position", config->min_position); ImGui::NextColumn();
+
+                        ImGui::Text("Max"); ImGui::NextColumn();
+                        ImGui::InputInt3("##max_position", config->max_position); ImGui::NextColumn();
+
+                        ImGui::Text("Velocity At Origin"); ImGui::NextColumn();
+                        ImGui::InputFloat3("##velocityAtOrigin", config->velocity_origin); ImGui::NextColumn();
+
+                        ImGui::Text("Variation Velocity"); ImGui::NextColumn();
+                        ImGui::InputFloat3("##variation_velocity", config->variation_velocity); ImGui::NextColumn();
+
+                        ImGui::Text("Variation Direction"); ImGui::NextColumn();
+                        ImGui::InputFloat3("##variation_direction", config->variation_direction); ImGui::NextColumn();
+
+                        ImGui::Spacing(); ImGui::Columns(1);
+                        ImGui::Custom::CentreTextLocal("Arm Generation", parent_size.x);
+
+                        SETUP_COLUMN;
+
+                        ImGui::Text("Arm Count"); ImGui::NextColumn();
+                        if(ImGui::InputInt("##number_of_arms", &config->number_of_arms)) {
+                            config->angle_of_arms.resize(config->number_of_arms);
+                        } ImGui::NextColumn();
+
+                        for(int i = 0; i < config->number_of_arms; i++) {
+                            // Shift cursor to right a little
+                            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10);
+                            ImGui::Text(("Arm - " + std::to_string(i)).c_str());
+                            ImGui::SetCursorPosX(ImGui::GetCursorPosX() - 10);
+
+                            ImGui::NextColumn();
+                            ImGui::SliderAngle(("##angle_of_arm_" + std::to_string(i)).c_str(), &config->angle_of_arms[i]); ImGui::NextColumn();
                         }
+
+                        ImGui::Text("Width"); ImGui::NextColumn();
+                        ImGui::InputFloat("##arm_width", &config->arm_width); ImGui::NextColumn();
+
+                        ImGui::Text("Length"); ImGui::NextColumn();
+                        ImGui::InputFloat("##arm_length", &config->arm_length); ImGui::NextColumn();
+
+                        ImGui::Text("Height"); ImGui::NextColumn();
+                        ImGui::InputFloat("##arm_height", &config->arm_height); ImGui::NextColumn();
+
+                        ImGui::Text("Offset"); ImGui::NextColumn();
+                        ImGui::InputFloat("##arm_offset", &config->arm_offset); ImGui::NextColumn();
+
+                        SETUP_COLUMN;
+#undef SETUP_COLUMN
                         ImGui::EndChild();
                     }
                 }
@@ -134,6 +185,20 @@ namespace windows {
 
                 int min_position[3] = {0, 0, 0};
                 int max_position[3] = {0, 0, 0};
+
+                float velocity_origin[3] = {0, 0, 0};
+                float variation_velocity[3]= {0, 0, 0};
+                float variation_direction[3] = {0, 0, 0};
+
+                std::vector<float> angle_of_arms = {};
+                int number_of_arms = 0;
+                float arm_width = 0;
+                float arm_length = 0;
+                float arm_height = 0;
+                float arm_offset = 0;
+
+                long double gaussian_mean[3] = {0, 0, 0};
+                long double gaussian_std[3] = {0, 0, 0};
 
             } star_generation;
         } config;
@@ -154,16 +219,15 @@ namespace windows {
             ImGui::NextColumn();
             static int tmp2 = 0;
 
-
             // Star Generation Dropdown Button and Combo
             if (ImGui::ArrowButton("##DOWN_123", config.star_generation.enabled ? ImGuiDir_Down : ImGuiDir_Right)) {
                 config.star_generation.enabled = !config.star_generation.enabled;
-                config.star_generation.target_height = config.star_generation.enabled ? 215 : 0;
+                config.star_generation.target_height = config.star_generation.enabled ? config.star_generation.config_window_height : 0;
 
             } ImGui::SameLine();
             if(ImGui::Combo("##35227", &config.star_generation.active_mode, config.star_generation.modes, IM_ARRAYSIZE(config.star_generation.modes))) {
                 config.star_generation.enabled = config.star_generation.active_mode != 0;
-                config.star_generation.target_height = config.star_generation.enabled ? 215 : 0;
+                config.star_generation.target_height = config.star_generation.enabled ? config.star_generation.config_window_height : 0;
             }
 
             ImGui::NextColumn();
@@ -177,34 +241,15 @@ namespace windows {
                 ImGui::SetColumnWidth(0, (firstColWidth / 2) + bias);
 
                 ImGui::Text("Region Divisions");
-                ImGui::Custom::HelpMarker(
-                        "Controls the number of divisions in each dimension of the simulation region. "
-                        "");
+                ImGui::Custom::HelpMarker("Controls the number of divisions in each dimension of the simulation region. ");
 
                 ImGui::NextColumn();
-                ImGui::InputInt3("##123", config.region_divisions); ImGui::NextColumn();
+                ImGui::InputInt3("##region_divisions", config.region_divisions); ImGui::NextColumn();
 
                 ImGui::Columns(1);
             }
-
-//                Vectorr min_position = Vectorr(-10, -10, -5);
-//                Vectorr max_position = Vectorr(10, 10, 5);
-//                Vectorr velocityAtOrigin = Vectorr(0.000002556727896654, 0.000002556727896654, 0.00000002);
-//                Vectorr variation_velocity = Vectorr(0.00000001056727896654, 0.00000001056727896654, 0.00000000002);
-//                long double variation_direction_x = 0.0174533;
-//                long double variation_direction_y = 0.0174533;
-//
-//                int number_of_arms = 0;
-//                std::vector<float> angle_of_arms = { };
-//                float arm_width = 0.1;
-//                float arm_length = 0.1;
-//                float arm_height = 0.1;
-//                float arm_offset = 0.1;
-//
 //                Vectorr gaussian_mean = Vectorr(0, 0, 0);
 //                Vectorr gaussian_std = Vectorr(0.2, 0.2, 0.2);
-//
-//                ImGui::SliderInt("##35229", &bias, -100, 100);
             ImGui::Separator();
 
             static bool generating = false;
