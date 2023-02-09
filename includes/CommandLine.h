@@ -85,7 +85,7 @@ public:
     // If the command is not an absolute path, it will be searched for in the system PATH.
     // Returns the exit code of the process, or -1 if the process could not be started.
 
-    int executeAndWait(int sin = 0, int sout = 0, int serr = 0)
+    int executeAndWait(int *program_pid = 0, int sin = 0, int sout = 0, int serr = 0)
     {
 #ifdef WIN32
         STARTUPINFO startInfo;
@@ -192,6 +192,9 @@ public:
             perror(("Error executing " + _program).c_str());
             exit(1);
         }
+
+        if(program_pid != 0)
+            *program_pid = pid;
 
         //free arg strings
         for(std::vector<char*>::iterator arg = execvpArguments.begin(); arg != execvpArguments.end(); ++arg)

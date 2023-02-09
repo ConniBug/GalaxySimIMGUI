@@ -180,6 +180,10 @@ void new_frame(GLFWwindow* window) {
 
     DrawDots();
 }
-
+void cleanup() {
+    printf("Cleaning up...\n");
+    windows::clean_up();
+    printf("Done cleaning up.\n");
+}
 
 #endif //GALAXYSIMULATIONUI_WINDOW_HANDLER_H

@@ -102,6 +102,8 @@ int main(int, char**)
     }
 
     // Cleanup
+    cleanup();
+
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
