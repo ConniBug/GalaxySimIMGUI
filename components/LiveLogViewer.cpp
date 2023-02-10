@@ -152,8 +152,8 @@ namespace windows {
         void LiveLogViewer::Draw(const char *title, ImVec2 pos, ImVec2 size, int flags) {
             globals->logViewer = this;
 
-            ImGui::SetNextWindowSize(size, ImGuiCond_Once);
-            ImGui::SetNextWindowPos(pos, ImGuiCond_Once);
+            ImGui::SetNextWindowSize(size);
+            ImGui::SetNextWindowPos(pos);
             if (!ImGui::Begin(title, NULL, flags)) {
                 ImGui::End();
                 return;
@@ -165,6 +165,12 @@ namespace windows {
             if (ImGui::BeginPopupContextItem()){
                 ImGui::EndPopup();
             }
+
+            int resized_delta = ImGui::GetWindowSize().y - size.y;
+            ImGui::Text("Resized by: %d", resized_delta);
+            if(std::abs(resized_delta) >= 1)
+                globals->bottom_panel_height = ImGui::GetWindowSize().y;
+
 
             // TODO: display items starting from the bottom
 

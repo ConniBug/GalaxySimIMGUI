@@ -11,6 +11,7 @@ namespace windows {
     void draw_logs(ImVec2 position, ImVec2 size, int flags) {
 //            ImGui::SetNextWindowSize(size);
 //            ImGui::SetNextWindowPos(position);
+
         static bool liveLogs = true;
         static widgets::LiveLogViewer* logViewer = new widgets::LiveLogViewer();
 
@@ -24,4 +25,5 @@ namespace windows {
         logViewer->Draw("Live Logs", position, size, flags);
     }
 } // Windows
+
 #endif //GALAXYSIMULATIONUI_WINDOW_LOGS_H

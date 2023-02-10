@@ -13,19 +13,37 @@ set(IMGUI_SOURCES
         ${IMGUI_DIR}/imgui_tables.cpp
         ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
         ${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+        imconfig.h
+)
+set(IMPLOT_DIR ./implot)
+set(IMPLOT_SOURCES
+        ${IMPLOT_DIR}/implot.cpp
+        ${IMPLOT_DIR}/implot_demo.cpp
+        ${IMPLOT_DIR}/implot_items.cpp
 )
 
 set(GLFW_PATH ./glfw)
+set(WINDOW_SOURCES
+        windows/window_handler.h
+        windows/run_sim.h
+        windows/header.h
+        windows/window_logs.h
+        windows/window_graphics.h
+)
+
 set(SOURCES
         main.cpp
-        windows/window_handler.h
         components/LiveLogViewer.cpp components/LiveLogViewer.h
-        windows/run_sim.h
         components/imgui_custom.h
         includes/Vector3.h
-        includes/CommandLine.h windows/header.h windows/window_logs.h includes/Globals.h includes/Globals.cpp)
+        includes/CommandLine.h
+        includes/Globals.h includes/Globals.cpp
+        includes/ConfigStruct.h
+        includes/json.h
+)
 
 include_directories(
+        ${IMPLOT_DIR}
         ${IMGUI_DIR}
         ${IMGUI_DIR}/backends
         components
@@ -35,5 +53,5 @@ include_directories(
 find_package(OpenGL REQUIRED)
 add_subdirectory(${GLFW_PATH})
 
-add_executable(GalaxySimulationUI main.cpp ${SOURCES} ${IMGUI_SOURCES})
+add_executable(GalaxySimulationUI main.cpp ${SOURCES} ${WINDOW_SOURCES} ${IMGUI_SOURCES} ${IMPLOT_SOURCES})
 target_link_libraries(GalaxySimulationUI glfw ${OPENGL_gl_LIBRARY})

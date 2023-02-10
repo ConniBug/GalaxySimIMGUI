@@ -18,6 +18,7 @@ namespace windows {
     class SimThread {
     private:
         int program_pid = 0;
+        pthread_t* thread = new pthread_t();
         static void* sim_thread(void* args) {
             int* program_pid = (int*)args;
             std::string pwd = std::filesystem::current_path().string();
@@ -30,7 +31,6 @@ namespace windows {
             std::cout << cmd.getCommandlineString() << std::endl;
             std::cout << cmd.executeAndWait(program_pid) << std::endl;
         }
-        pthread_t* thread = new pthread_t();
     public:
         SimThread() {
             pthread_create(thread, NULL, sim_thread, (void*)&program_pid);
@@ -90,10 +90,11 @@ namespace windows {
                             ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
                     last_height = current_height;
 
-                    if(current_height && ImGui::BeginChild("Star Generation", temp_size, 0, flags))
+                    if(current_height && ImGui::BeginChild("Star Generation##123", temp_size, 0, flags))
                     {
                         int tmp_col_counter = 0;
 #define SETUP_COLUMN ++tmp_col_counter; ImGui::Columns(2, "STAR_GEN_COL##" + tmp_col_counter); ImGui::SetColumnWidth(0, width / 2); ImGui::Spacing()
+
                         ImGui::Custom::CentreTextLocal("Generation Settings", parent_size.x);
 
                         ImGui::Custom::CentreTextLocal(config->modes[config->active_mode], parent_size.x);
@@ -107,10 +108,11 @@ namespace windows {
                         ImGui::InputInt("##stars_per_arm", &config->stars_per_arm); ImGui::NextColumn();
 
                         ImGui::Text("Mean Mass"); ImGui::NextColumn();
-                        ImGui::InputFloat("##mean_mass", &config->mean_mass); ImGui::NextColumn();
+                        ImGui::InputFloat("##mean_mass", &config->mean_mass, 0, 0, "%f Solar Masses"); ImGui::NextColumn();
 
                         ImGui::Text("Std Mass"); ImGui::NextColumn();
-                        ImGui::InputFloat("##std_mass", &config->std_mass); ImGui::NextColumn();
+                        ImGui::InputFloat("##std_mass", &config->std_mass, 0, 0, "%f Solar Masses"); ImGui::NextColumn();
+                        std::clamp(config->std_mass, 0.0f, config->mean_mass);
 
                         //                        ImGui::SliderInt("Star Count", &config->star_count, 0, 10000, "%d");
                         //                        ImGui::SliderFloat("Star Count", (float*)&config->star_count, 0, 1000, "%e");
@@ -206,10 +208,26 @@ namespace windows {
         ImGui::SetNextWindowSize(size);
         ImGui::SetNextWindowPos(position);
         if (ImGui::Begin("Simulation Config Window", NULL,  flags)) {
+            int resized_delta = ImGui::GetWindowSize().x - size.x;
+            ImGui::Text("Resized by: %d", resized_delta);
+            if(std::abs(resized_delta) >= 1)
+                globals->left_panel_width = ImGui::GetWindowSize().x;
+
             static int firstColWidth = 300;
 
             ImGui::Separator();
-            ImGui::Text("Simulation Config");
+            if (ImGui::BeginMenuBar())
+            {
+                ImGui::Text("Simulation Config");
+                if (ImGui::BeginMenu("File"))
+                {
+                    if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */ }
+                    if (ImGui::MenuItem("Save", "Ctrl+S"))   { /* Do stuff */ }
+                    if (ImGui::MenuItem("Close", "Ctrl+W"))  { /*my_tool_active = false;*/ }
+                    ImGui::EndMenu();
+                }
+                ImGui::EndMenuBar();
+            }
             ImGui::Separator();
             ImGui::Columns(2, "sdsada");
             static int bias = 16;

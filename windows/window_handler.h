@@ -15,6 +15,7 @@
 #include "run_sim.h"
 #include "header.h"
 #include "window_logs.h"
+#include "window_graphics.h"
 #include <cmath>
 #include <cassert>
 #include <random>
@@ -43,8 +44,85 @@ void InitStars() {
         bgStarVel[i][1] = dis_v(gen);
     }
 }
+#include <vector>
 void DrawDots()
 {
+    if ( 2 == 1 ){
+        auto *draw = ImGui::GetForegroundDrawList();
+
+        struct Region {
+            ImVec2 min;
+            ImVec2 max;
+        };
+
+        std::vector<Region> regions{
+                {ImVec2(-50, -50), ImVec2(150, 150)},
+                {ImVec2(-50, 50),  ImVec2(150, 250)},
+                {ImVec2(-50, 150), ImVec2(150, 350)},
+                {ImVec2(-50, 250), ImVec2(150, 450)},
+                {ImVec2(50, -50),  ImVec2(250, 150)},
+                {ImVec2(50, 50),   ImVec2(250, 250)},
+                {ImVec2(50, 150),  ImVec2(250, 350)},
+                {ImVec2(50, 250),  ImVec2(250, 450)},
+                {ImVec2(150, -50), ImVec2(350, 150)},
+                {ImVec2(150, 50),  ImVec2(350, 250)},
+                {ImVec2(150, 150), ImVec2(350, 350)},
+                {ImVec2(150, 250), ImVec2(350, 450)},
+                {ImVec2(250, -50), ImVec2(450, 150)},
+                {ImVec2(250, 50),  ImVec2(450, 250)},
+                {ImVec2(250, 150), ImVec2(450, 350)},
+                {ImVec2(250, 250), ImVec2(450, 450)},
+        };
+
+#define COLOUR_RED ImVec4(1.0f, 0.0f, 0.0f, 1.0f)
+#define COLOUR_GREEN ImVec4(0.0f, 1.0f, 0.0f, 1.0f)
+#define COLOUR_BLUE ImVec4(0.0f, 0.0f, 1.0f, 1.0f)
+#define COLOUR_YELLOW ImVec4(1.0f, 1.0f, 0.0f, 1.0f)
+#define COLOUR_MAGENTA ImVec4(1.0f, 0.0f, 1.0f, 1.0f)
+#define COLOUR_CYAN ImVec4(0.0f, 1.0f, 1.0f, 1.0f)
+#define COLOUR_WHITE ImVec4(1.0f, 1.0f, 1.0f, 1.0f)
+#define COLOUR_BLACK ImVec4(0.0f, 0.0f, 0.0f, 1.0f)
+
+        int cnt = 0;
+        for (auto &region: regions) {
+            ++cnt;
+            static std::random_device dev;
+            static std::mt19937 rng(dev());
+            std::uniform_int_distribution<std::mt19937::result_type> dist6(0, 255); // distribution in range [1, 6]
+
+            region.min.x += 100;
+            region.min.y += 100;
+            region.max.x += 100;
+            region.max.y += 100;
+
+            ImVec4 colour = COLOUR_WHITE;
+            switch (cnt % 6) {
+                case 0:
+                    colour = COLOUR_RED;
+                    break;
+                case 1:
+                    colour = COLOUR_GREEN;
+                    break;
+                case 2:
+                    colour = COLOUR_BLUE;
+                    break;
+                case 3:
+                    colour = COLOUR_YELLOW;
+                    break;
+                case 4:
+                    colour = COLOUR_MAGENTA;
+                    break;
+                case 5:
+                    colour = COLOUR_CYAN;
+                    break;
+            }
+            colour.x *= 255;
+            colour.y *= 255;
+            colour.z *= 255;
+            draw->AddRect(region.min, region.max, IM_COL32(colour.x, colour.y, colour.z, 100));
+        }
+    }
+
     static bool once = true;
     if (once) {
         once = false;
@@ -52,9 +130,9 @@ void DrawDots()
     }
     ImDrawList* draw_list = ImGui::GetBackgroundDrawList();
 
+    static std::random_device rd;
+    static std::mt19937 gen(rd()); gen.seed(rand());
     for (int i = 0; i < 1000; i++) {
-        static std::random_device rd;
-        std::mt19937 gen(rd());
         std::uniform_int_distribution<> dis_alpha(100, 150);
 
         ImVec2 dot_pos(bgStarPos[i][0], bgStarPos[i][1]);
@@ -151,31 +229,48 @@ void new_frame(GLFWwindow* window) {
 
     glfwSetWindowTitle(window, str.c_str());
 
-    auto header_size = ImVec2(ImGui::GetIO().DisplaySize.x, 100);
+    auto header_size = ImVec2(ImGui::GetIO().DisplaySize.x, globals->top_panel_height);
     windows::draw_header(
         ImVec2(// From -> To
                 std::lerp(ImGui::GetIO().DisplaySize.x, 0, anim_progress),
                 std::lerp(ImGui::GetIO().DisplaySize.y, 0, anim_progress)
         ),
-        ImVec2(// From -> To
-                std::lerp(ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.x, anim_progress),
-                std::lerp(0, header_size.y, anim_progress)
-        )
+        ImVec2(ImGui::GetIO().DisplaySize.x, header_size.y)
+//        ImVec2(// From -> To
+//                std::lerp(ImGui::GetIO().DisplaySize.x, ImGui::GetIO().DisplaySize.x, anim_progress),
+//                std::lerp(0, header_size.y, anim_progress)
+//        )
     );
 
     windows::draw_logs(
-            ImVec2(0, ImGui::GetMainViewport()->Size.y - 120),
-            ImVec2(ImGui::GetMainViewport()->Size.x / 2, 120),
+            ImVec2(0, ImGui::GetMainViewport()->Size.y - globals->bottom_panel_height),
+
+            ImVec2(ImGui::GetMainViewport()->Size.x, globals->bottom_panel_height),
             ImGuiWindowFlags_NoTitleBar
     );
 
+//    ImGui::SetNextWindowPos(ImVec2(0, ImGui::GetIO().DisplaySize.y - 120));
+//    ImGui::ShowDemoWindow();
+
     windows::run_sim(
-        ImVec2(// From -> To
-                std::lerp(ImGui::GetIO().DisplaySize.x, 0, anim_progress),
-                std::lerp(ImGui::GetIO().DisplaySize.y, 100, anim_progress)
-        ),
-        ImVec2(500, ImGui::GetIO().DisplaySize.y - 100 - 120),
-        ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar
+//        ImVec2(// From -> To
+//                std::lerp(ImGui::GetIO().DisplaySize.x, 0, anim_progress),
+//                std::lerp(ImGui::GetIO().DisplaySize.y, globals->top_panel_height, anim_progress)
+//        ),
+        ImVec2(0, globals->top_panel_height),
+
+        ImVec2(globals->left_panel_width, ImGui::GetIO().DisplaySize.y - globals->top_panel_height - globals->bottom_panel_height),
+
+        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse  |
+        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_MenuBar
+    );
+
+    windows::draw_graphics(
+            ImVec2(globals->left_panel_width, globals->top_panel_height),
+
+            ImVec2(ImGui::GetIO().DisplaySize.x - globals->left_panel_width, ImGui::GetIO().DisplaySize.y - globals->top_panel_height - globals->bottom_panel_height),
+
+            ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse  | ImGuiWindowFlags_NoTitleBar
     );
 
     DrawDots();

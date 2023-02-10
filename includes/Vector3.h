@@ -10,17 +10,17 @@
 #include <valarray>
 #include <sstream>
 
-#define fVector Vector_t<float>
-#define ldVector Vector_t<long double>
+#include "json.h"
+using json = nlohmann::json;
 
+#define fVector Vector_t<float>
 #define Vectorr Vector_t<long double>
 template<typename TYPE>
 struct Vector_t {
     Vector_t() = default;
-    constexpr Vector_t(TYPE x, TYPE y) noexcept : x{ x }, y{ y } {}
+    constexpr Vector_t(TYPE x, TYPE y) noexcept : x{ x }, y{ y }, z( 0 ) {}
 
-    constexpr Vector_t(TYPE x, TYPE y, TYPE z) noexcept : x{ x }, y{ y }, z{ z } {
-    }
+    constexpr Vector_t(TYPE x, TYPE y, TYPE z) noexcept : x{ x }, y{ y }, z{ z } {}
 
     constexpr Vector_t(TYPE x, TYPE y, TYPE z, float scale_factor) noexcept : x{ x }, y{ y }, z{ z } {
         if(scale_factor != 0)
@@ -61,84 +61,72 @@ struct Vector_t {
         return a.x == b.x && a.y == b.y && a.z == b.z;
     }
 
-    friend constexpr auto operator!=(const Vector_t& a, const Vector_t& b) noexcept
-    {
+    friend constexpr auto operator!=(const Vector_t& a, const Vector_t& b) noexcept {
         return !(a == b);
     }
 
-    constexpr Vector_t& operator=(const TYPE array[3]) noexcept
-    {
+    constexpr Vector_t& operator=(const TYPE array[3]) noexcept {
         x = array[0];
         y = array[1];
         z = array[2];
         return *this;
     }
 
-    constexpr Vector_t& operator+=(const Vector_t& v) noexcept
-    {
+    constexpr Vector_t& operator+=(const Vector_t& v) noexcept {
         x += v.x;
         y += v.y;
         z += v.z;
         return *this;
     }
 
-    constexpr Vector_t& operator+=(TYPE f) noexcept
-    {
+    constexpr Vector_t& operator+=(TYPE f) noexcept {
         x += f;
         y += f;
         z += f;
         return *this;
     }
 
-    constexpr Vector_t& operator-=(const Vector_t& v) noexcept
-    {
+    constexpr Vector_t& operator-=(const Vector_t& v) noexcept {
         x -= v.x;
         y -= v.y;
         z -= v.z;
         return *this;
     }
 
-    constexpr Vector_t& operator-=(TYPE f) noexcept
-    {
+    constexpr Vector_t& operator-=(TYPE f) noexcept {
         x -= f;
         y -= f;
         z -= f;
         return *this;
     }
 
-    friend constexpr auto operator-(const Vector_t& a, const Vector_t& b) noexcept
-    {
+    friend constexpr auto operator-(const Vector_t& a, const Vector_t& b) noexcept {
         return Vector_t{ a.x - b.x, a.y - b.y, a.z - b.z };
     }
 
-    friend constexpr auto operator+(const Vector_t& a, const Vector_t& b) noexcept
-    {
+    friend constexpr auto operator+(const Vector_t& a, const Vector_t& b) noexcept {
         return Vector_t{ a.x + b.x, a.y + b.y, a.z + b.z };
     }
 
-    friend constexpr auto operator*(const Vector_t& a, const Vector_t& b) noexcept
-    {
+    friend constexpr auto operator*(const Vector_t& a, const Vector_t& b) noexcept {
         return Vector_t{ a.x * b.x, a.y * b.y, a.z * b.z };
     }
 
-    constexpr Vector_t& operator/=(TYPE div) noexcept
-    {
+    constexpr Vector_t& operator/=(TYPE div) noexcept {
         x /= div;
         y /= div;
         z /= div;
         return *this;
     }
 
-    constexpr Vector_t& operator/(TYPE div) noexcept
-    {
+    constexpr Vector_t& operator/(TYPE div) noexcept {
         x /= div;
         y /= div;
         z /= div;
         return *this;
     }
 
-    constexpr Vector_t& operator/(Vector_t v) noexcept
-    {
+    constexpr Vector_t& operator/(Vector_t v) noexcept {
         x /= v.x;
         y /= v.y;
         z /= v.z;
@@ -205,7 +193,7 @@ struct Vector_t {
         return (*this - v).length();
     }
 
-    TYPE x, y, z;
+    TYPE x = 0, y = 0, z = 0;
 
     // rotate Vector_t by angle (x angle = a, y angle = b, z angle = c)
     void rotate(TYPE a, TYPE b, TYPE c) {
@@ -239,5 +227,22 @@ struct Vector_t {
         z *= d;
     }
 };
+
+#pragma region Vector Serialization
+template<typename T>
+void to_json(json& j, const Vector_t<T> v) {
+    j = json{
+            { "x", v.x },
+            { "y", v.x },
+            { "z", v.x }
+    };
+}
+template<typename T>
+void from_json(const json& j, Vector_t<T> v) {
+    j.at("x").get_to(v.x);
+    j.at("y").get_to(v.y);
+    j.at("z").get_to(v.z);
+}
+#pragma endregion
 
 #endif //C_VERSION_Vector_t3_H

@@ -13,10 +13,16 @@ namespace windows {
 //            auto viewPort = ImGui::GetMainViewport()->Size;
         ImGui::SetNextWindowSize(size);
         ImGui::SetNextWindowPos(position);
-        if (ImGui::Begin("Header Window", NULL, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar)) {
+        if (ImGui::Begin("Header Window", NULL, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar)) {
             ImGui::Text("Galaxy Simulation - V0.1.0b");
             ImGui::Spacing();
 
+            int resized_delta = ImGui::GetWindowSize().y - size.y;
+            ImGui::Text("Resized by: %d", resized_delta);
+            if(std::abs(resized_delta) >= 1) {
+                std::cout << "Resized top panel by: " << resized_delta << std::endl;
+                globals->top_panel_height = ImGui::GetWindowSize().y;
+            }
             // Get frame number
             ImGui::Text("Frame: %d", ImGui::GetFrameCount());
 
