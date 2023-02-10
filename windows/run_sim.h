@@ -33,7 +33,7 @@ namespace windows {
         }
     public:
         SimThread() {
-            pthread_create(thread, NULL, sim_thread, (void*)&program_pid);
+            pthread_create(thread, nullptr, sim_thread, (void*)&program_pid);
         }
 //        ~SimThread() {
 //            printf("Killing simulation thread with PID %d\n", program_pid);
@@ -76,21 +76,24 @@ namespace windows {
                 const int config_window_height = line_height * 15; // Line height * number of lines
 
 
-                void draw_config(star_generation *config, ImVec2 parent_size, int width) {
-                    static int current_height = 0;
+                const void draw_config(star_generation *config, ImVec2 parent_size, int width) {
+                    static float current_height = 0;
                     if(current_height != config->target_height)
                         current_height = std::lerp(current_height, target_height, config->animation_speed / 100.0f);
-
+                    if(current_height < 1)
+                        current_height = 0;
 //                        return;
                     ImGui::Columns(1);
 
                     ImVec2 temp_size = ImVec2(parent_size.x - 16, current_height);
                     static int last_height = current_height;
-                    unsigned int flags = current_height == last_height ? 0 :
+//                    std::cout << "Current Height: " << current_height << std::endl;
+//                    std::cout << "Last Height: " << last_height << std::endl;
+                    unsigned int flags = current_height >= target_height / 2  ? 0 :
                             ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
                     last_height = current_height;
 
-                    if(current_height && ImGui::BeginChild("Star Generation##123", temp_size, 0, flags))
+                    if(current_height && ImGui::BeginChild("Star Generation##123", temp_size, false, flags))
                     {
                         int tmp_col_counter = 0;
 #define SETUP_COLUMN ++tmp_col_counter; ImGui::Columns(2, "STAR_GEN_COL##" + tmp_col_counter); ImGui::SetColumnWidth(0, width / 2); ImGui::Spacing()
@@ -144,10 +147,12 @@ namespace windows {
 
                         ImGui::Text("Arm Count"); ImGui::NextColumn();
                         if(ImGui::InputInt("##number_of_arms", &config->number_of_arms)) {
+                            if(config->number_of_arms < 0)
+                                config->number_of_arms = 0;
                             config->angle_of_arms.resize(config->number_of_arms);
                         } ImGui::NextColumn();
 
-                        for(int i = 0; i < config->number_of_arms; i++) {
+                        for(int i = 0; i < config->number_of_arms; ++i) {
                             // Shift cursor to right a little
                             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10);
                             ImGui::Text(("Arm - " + std::to_string(i)).c_str());
@@ -213,9 +218,6 @@ namespace windows {
             if(std::abs(resized_delta) >= 1)
                 globals->left_panel_width = ImGui::GetWindowSize().x;
 
-            static int firstColWidth = 300;
-
-            ImGui::Separator();
             if (ImGui::BeginMenuBar())
             {
                 ImGui::Text("Simulation Config");
@@ -230,8 +232,8 @@ namespace windows {
             }
             ImGui::Separator();
             ImGui::Columns(2, "sdsada");
-            static int bias = 16;
-            ImGui::SetColumnWidth(0, (firstColWidth / 2) + bias);
+            static int bias = 0;
+            ImGui::SetColumnWidth(-1, (globals->left_panel_width / 2) + bias);
 
             ImGui::Text("Generate Stars");
             ImGui::NextColumn();
@@ -251,12 +253,12 @@ namespace windows {
             ImGui::NextColumn();
 
             {
-                config.star_generation.draw_config(&config.star_generation, size, firstColWidth + 15);
+                config.star_generation.draw_config(&config.star_generation, size, globals->left_panel_width - 15);
 
                 ImGui::Separator();
 
                 ImGui::Columns(2, "sdsada");
-                ImGui::SetColumnWidth(0, (firstColWidth / 2) + bias);
+                ImGui::SetColumnWidth(-1, (globals->left_panel_width / 2) + bias);
 
                 ImGui::Text("Region Divisions");
                 ImGui::Custom::HelpMarker("Controls the number of divisions in each dimension of the simulation region. ");

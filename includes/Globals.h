@@ -18,8 +18,8 @@ struct Globals {
 
     void* logViewer = nullptr;
 
-    int top_panel_height = 200;
-    int left_panel_width = 200;
+    int top_panel_height = 120;
+    int left_panel_width = 350;
     int bottom_panel_height = 200;
 };
 

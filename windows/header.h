@@ -18,11 +18,19 @@ namespace windows {
             ImGui::Spacing();
 
             int resized_delta = ImGui::GetWindowSize().y - size.y;
-            ImGui::Text("Resized by: %d", resized_delta);
-            if(std::abs(resized_delta) >= 1) {
-                std::cout << "Resized top panel by: " << resized_delta << std::endl;
+            if(std::abs(resized_delta) >= 1)
                 globals->top_panel_height = ImGui::GetWindowSize().y;
+            int free_space = ImGui::GetMainViewport()->Size.y - globals->top_panel_height - globals->bottom_panel_height;
+            if(free_space < 50) {
+                globals->top_panel_height = ImGui::GetMainViewport()->Size.y - globals->top_panel_height - 50;
             }
+            if(globals->top_panel_height < 50) {
+                globals->top_panel_height = 50;
+            } else if(globals->top_panel_height > 160) {
+                globals->top_panel_height = 160;
+            }
+
+
             // Get frame number
             ImGui::Text("Frame: %d", ImGui::GetFrameCount());
 

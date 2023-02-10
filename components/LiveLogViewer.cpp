@@ -167,9 +167,15 @@ namespace windows {
             }
 
             int resized_delta = ImGui::GetWindowSize().y - size.y;
-            ImGui::Text("Resized by: %d", resized_delta);
             if(std::abs(resized_delta) >= 1)
                 globals->bottom_panel_height = ImGui::GetWindowSize().y;
+            int free_space = ImGui::GetMainViewport()->Size.y - globals->top_panel_height - globals->bottom_panel_height;
+            if(free_space < 50) {
+                globals->bottom_panel_height = ImGui::GetMainViewport()->Size.y - globals->top_panel_height - 50;
+            }
+            if(globals->bottom_panel_height < 100)  {
+                globals->bottom_panel_height = 100;
+            }
 
 
             // TODO: display items starting from the bottom
