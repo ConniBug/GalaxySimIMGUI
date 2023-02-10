@@ -35,31 +35,31 @@ namespace windows {
         SimThread() {
             pthread_create(thread, NULL, sim_thread, (void*)&program_pid);
         }
-        ~SimThread() {
-            printf("Killing simulation thread with PID %d\n", program_pid);
-#if _WIN32 // Windows
-            system(("taskkill /F /PID " + std::to_string(program_pid)).c_str());
-            // Check if the process is still running
-            if(system(("taskkill /F /PID " + std::to_string(program_pid)).c_str()) == 0)
-#else // Linux, Mac or other Unix based OS
-            system(("kill -9 " + std::to_string(program_pid) + " << /dev/null").c_str());
-            // Check if the process is still running
-            if(system(("kill -0 " + std::to_string(program_pid)).c_str()) == 0) {
-#endif
-                printf("Failed to kill simulation thread with PID %d\n", program_pid);
-#ifdef _WIN32
-                // Kill by proccess name now
-                if(system(("taskkill /F /IM GalaxySimulation.exe").c_str()) == 0) {
-#else // Linux, Mac or other Unix based OS
-                // Kill by proccess name now
-                if(system(std::string("killall GalaxySimulation").c_str()) == 0) {
-#endif
-                    printf("Killed simulation thread by name %d\n", program_pid);
-                }
-            }
-            else
-                printf("Killed simulation thread with PID %d\n", program_pid);
-        }
+//        ~SimThread() {
+//            printf("Killing simulation thread with PID %d\n", program_pid);
+//#if _WIN32 // Windows
+//            system(("taskkill /F /PID " + std::to_string(program_pid)).c_str());
+//            // Check if the process is still running
+//            if(system(("taskkill /F /PID " + std::to_string(program_pid)).c_str()) == 0)
+//#else // Linux, Mac or other Unix based OS
+//            system(("kill -9 " + std::to_string(program_pid) + " << /dev/null").c_str());
+//            // Check if the process is still running
+//            if(system(("kill -0 " + std::to_string(program_pid)).c_str()) == 0) {
+//#endif
+//                printf("Failed to kill simulation thread with PID %d\n", program_pid);
+//#ifdef _WIN32
+//                // Kill by proccess name now
+//                if(system(("taskkill /F /IM GalaxySimulation.exe").c_str()) == 0) {
+//#else // Linux, Mac or other Unix based OS
+//                // Kill by proccess name now
+//                if(system(std::string("killall GalaxySimulation").c_str()) == 0) {
+//#endif
+//                    printf("Killed simulation thread by name %d\n", program_pid);
+//                }
+//            }
+//                else
+//                printf("Killed simulation thread with PID %d\n", program_pid);
+//        }
     };
     std::vector<SimThread*> sim_threads = {};
 

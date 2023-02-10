@@ -10,7 +10,7 @@
 #include <imgui.h>
 #include "GLFW/glfw3.h"
 #include <thread>
-#include <libc.h>
+//#include <libc.h>
 #include <LiveLogViewer.h>
 #include "run_sim.h"
 #include "header.h"
